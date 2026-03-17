@@ -1,0 +1,496 @@
+<div class="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+  <div class="mb-4">
+    <button
+      type="button"
+      (click)="volverAtras()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white transition-colors"
+      title="Volver a la página anterior"
+      aria-label="Volver atrás"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Volver atrás
+    </button>
+  </div>
+
+  <div class="mb-8 text-center">
+    <h1 class="text-3xl sm:text-4xl font-black text-white mb-2">Partidas</h1>
+    <p class="text-sm sm:text-base text-slate-400">Crea retos, acepta enfrentamientos y resuelve batallas.</p>
+  </div>
+
+  <div class="mb-6 bg-white/5 border border-white/10 rounded-xl p-5">
+    <h2 class="text-xl font-bold text-white mb-3">Crear nueva partida</h2>
+
+    @if (!puedeCrearPartida()) {
+      <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+        <p class="text-red-300 text-sm">
+          Necesitas un equipo válido para crear partidas. Completa los requisitos en "Mis Personajes".
+        </p>
+      </div>
+    } @else {
+      @if (!esPremium()) {
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <p class="text-slate-300 text-sm md:flex-1">
+            Se buscará automáticamente un rival aleatorio válido y la partida empezará al instante.
+          </p>
+          <button
+            (click)="crearReto()"
+            [disabled]="creandoReto()"
+            class="w-full md:w-auto px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-400 text-white font-medium transition-colors"
+          >
+            @if (creandoReto()) {
+              Buscando rival...
+            } @else {
+              Crear partida aleatoria
+            }
+          </button>
+        </div>
+      } @else {
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <p class="text-slate-300 text-sm md:flex-1">
+            También puedes crear una partida aleatoria como en el modo estándar (inicio inmediato).
+          </p>
+          <button
+            (click)="rivalSeleccionadoId.set(null); crearReto()"
+            [disabled]="creandoReto()"
+            class="w-full md:w-auto px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-400 text-white font-medium transition-colors"
+          >
+            @if (creandoReto()) {
+              Buscando rival...
+            } @else {
+              Crear partida aleatoria
+            }
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-3 items-end">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <label class="block text-sm text-slate-300">Selecciona amigo rival</label>
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                Premium
+              </span>
+            </div>
+            <select
+              class="w-full bg-slate-800 border border-white/20 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+              [ngModel]="rivalSeleccionadoId()"
+              (ngModelChange)="rivalSeleccionadoId.set($event ? +$event : null)"
+            >
+              <option [ngValue]="null" class="bg-slate-800 text-white">-- Elige un amigo disponible --</option>
+              @for (usuario of usuariosDisponibles(); track usuario.id) {
+                <option [ngValue]="usuario.id" class="bg-slate-800 text-white">
+                  {{ usuario.nombre }} {{ usuario.apellido }} ({{ usuario.email }})
+                </option>
+              }
+            </select>
+          </div>
+
+          <button
+            (click)="crearReto()"
+            [disabled]="!rivalSeleccionadoId() || creandoReto()"
+            class="w-full md:w-auto px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-400 text-white font-medium transition-colors"
+          >
+            @if (creandoReto()) {
+              Creando...
+            } @else {
+              Crear reto a amigo
+            }
+          </button>
+        </div>
+
+        @if (usuariosDisponibles().length === 0) {
+          <p class="text-slate-400 text-xs mt-3">
+            No tienes amigos disponibles con equipo válido o ya existe un reto pendiente con ellos.
+          </p>
+        }
+      }
+    }
+  </div>
+
+  @if (esPremium()) {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <section class="bg-white/5 border border-white/10 rounded-xl p-5">
+        <h2 class="text-xl font-bold text-white mb-4">Retos recibidos</h2>
+
+        @if (pendientesRecibidas().length === 0) {
+          <p class="text-slate-400 text-sm">No tienes retos pendientes por aceptar.</p>
+        } @else {
+          <div class="space-y-3">
+            @for (partida of pendientesRecibidas(); track partida.id) {
+              <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+                <p class="text-slate-300 text-sm mb-2 break-words">
+                  <span class="text-white font-semibold">{{ partida.retador.nombre }} {{ partida.retador.apellido }}</span>
+                  te ha retado.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-2">
+                  <button
+                    (click)="aceptar(partida)"
+                    [disabled]="accionandoPartidaId() === partida.id"
+                    class="w-full sm:w-auto px-3 py-1.5 text-sm rounded bg-green-600 hover:bg-green-700 text-white disabled:bg-slate-700"
+                  >
+                    Aceptar
+                  </button>
+                  <button
+                    (click)="rechazar(partida)"
+                    [disabled]="accionandoPartidaId() === partida.id"
+                    class="w-full sm:w-auto px-3 py-1.5 text-sm rounded bg-red-600 hover:bg-red-700 text-white disabled:bg-slate-700"
+                  >
+                    Rechazar
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="bg-white/5 border border-white/10 rounded-xl p-5">
+        <h2 class="text-xl font-bold text-white mb-4">Retos enviados</h2>
+
+        @if (pendientesEnviadas().length === 0) {
+          <p class="text-slate-400 text-sm">No has enviado retos pendientes.</p>
+        } @else {
+          <div class="space-y-3">
+            @for (partida of pendientesEnviadas(); track partida.id) {
+              <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+                <p class="text-slate-300 text-sm mb-2 break-words">
+                  Reto enviado a
+                  <span class="text-white font-semibold">{{ partida.retado.nombre }} {{ partida.retado.apellido }}</span>
+                </p>
+                <button
+                  (click)="cancelar(partida)"
+                  [disabled]="accionandoPartidaId() === partida.id"
+                  class="w-full sm:w-auto px-3 py-1.5 text-sm rounded bg-slate-700 hover:bg-slate-600 text-white disabled:bg-slate-800"
+                >
+                  Cancelar
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    </div>
+  }
+
+  <section class="bg-white/5 border border-white/10 rounded-xl p-5">
+    <h2 class="text-xl font-bold text-white mb-4">Historial</h2>
+
+    @if (isLoading()) {
+      <div class="flex justify-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
+      </div>
+    } @else if (historial().length === 0) {
+      <p class="text-slate-400 text-sm">Todavía no hay partidas en tu historial.</p>
+    } @else {
+      <div class="space-y-3">
+        @for (partida of historial(); track partida.id) {
+          <div class="bg-white/5 border border-white/10 rounded-lg p-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-white font-semibold break-words">
+                  {{ partida.retador.nombre }} vs {{ partida.retado.nombre }}
+                </p>
+                <div class="mt-1">
+                  <span
+                    class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border"
+                    [ngClass]="partida.tipoReto === 'aleatoria'
+                      ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40'"
+                  >
+                    {{ partida.tipoReto === 'aleatoria' ? 'Aleatoria' : 'Reto amigo' }}
+                  </span>
+                </div>
+                <p class="text-slate-400 text-xs">Estado: {{ partida.estado }}</p>
+                @if (partida.estado === 'resuelta' && partida.ganador) {
+                  <p class="text-emerald-300 text-xs mt-1">
+                    Ganador: {{ partida.ganador.nombre }} {{ partida.ganador.apellido }}
+                    ({{ partida.puntuacionRetador }} - {{ partida.puntuacionRetado }})
+                  </p>
+                }
+              </div>
+
+              @if (partida.estado === 'aceptada') {
+                <button
+                  (click)="resolver(partida)"
+                  [disabled]="accionandoPartidaId() === partida.id"
+                  class="w-full md:w-auto px-3 py-1.5 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-slate-700"
+                >
+                  Resolver
+                </button>
+              } @else if (partida.estado === 'resuelta') {
+                <button
+                  (click)="verBatalla(partida)"
+                  [disabled]="animacionVisible()"
+                  class="w-full md:w-auto px-3 py-1.5 text-sm rounded bg-violet-600 hover:bg-violet-700 text-white disabled:bg-slate-700"
+                >
+                  Ver batalla
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </section>
+</div>
+
+@if (animacionVisible() && partidaEnAnimacion(); as partidaAnimada) {
+  <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/90 backdrop-blur-sm px-3 py-4 sm:px-4 sm:py-6">
+    <div class="w-full max-w-5xl mx-auto bg-slate-900/85 border border-white/10 rounded-2xl p-4 sm:p-6 md:p-8">
+      <div class="text-center mb-6">
+        @if (animacionFase() === 'intro') {
+          <p class="text-sm uppercase tracking-[0.2em] text-red-300">Preparando duelo</p>
+          <h3 class="text-xl sm:text-2xl md:text-3xl font-black text-white mt-2">¡Frente a frente!</h3>
+          @if (cuentaAtras(); as numero) {
+            <p class="mt-3 text-3xl sm:text-4xl md:text-5xl font-black text-amber-300 animate-pulse">{{ numero }}</p>
+          }
+        } @else if (animacionFase() === 'combate') {
+          <p class="text-sm uppercase tracking-[0.2em] text-amber-300 animate-pulse">Combatiendo</p>
+          <h3 class="text-xl sm:text-2xl md:text-3xl font-black text-white mt-2">Enfrentamiento de equipos</h3>
+        } @else {
+          <p class="text-sm uppercase tracking-[0.2em] text-emerald-300">Resultado</p>
+          <h3 class="text-xl sm:text-2xl md:text-3xl font-black text-white mt-2">Partida resuelta</h3>
+        }
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-center mb-5">
+        <div
+          class="rounded-xl border border-red-500/40 bg-red-500/10 p-4 transition-all duration-700"
+          [class.opacity-0]="!entradaEquiposActiva()"
+          [class.opacity-100]="entradaEquiposActiva()"
+          [class.-translate-x-8]="!entradaEquiposActiva()"
+          [class.-translate-x-0]="entradaEquiposActiva()"
+          [class.ring-2]="animacionFase() === 'resultado' && esEquipoGanador('retador')"
+          [class.ring-emerald-400]="animacionFase() === 'resultado' && esEquipoGanador('retador')"
+        >
+          <p class="text-red-200 text-xs uppercase tracking-wider mb-1">Retador</p>
+          <p class="text-white font-bold text-base sm:text-lg break-words">
+            {{ partidaAnimada.retador.nombre }} {{ partidaAnimada.retador.apellido }}
+          </p>
+
+          <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+            @for (personaje of getEquipoPersonajes(partidaAnimada.equipoRetador); track $index) {
+              <div
+                class="relative overflow-hidden rounded-xl border border-red-400/20 bg-gradient-to-br from-red-500/10 via-slate-900/40 to-slate-950/60 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all duration-500"
+                [style.transitionDelay.ms]="$index * 120"
+                [class.opacity-0]="!entradaEquiposActiva()"
+                [class.opacity-100]="entradaEquiposActiva()"
+                [class.translate-y-3]="!entradaEquiposActiva()"
+                [class.translate-y-0]="entradaEquiposActiva()"
+              >
+                @if (getPersonajeImagenUrl(personaje); as imageUrl) {
+                  <img
+                    [src]="imageUrl"
+                    [alt]="getPersonajeNombre(personaje)"
+                    class="w-full h-24 sm:h-28 object-contain rounded-lg scale-110 drop-shadow-[0_8px_18px_rgba(0,0,0,0.45)]"
+                  />
+                } @else {
+                  <div class="w-full h-24 sm:h-28 rounded-lg bg-slate-800/90 flex items-center justify-center text-2xl">🦸</div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="text-center">
+          @if (animacionFase() === 'combate') {
+            <div class="mx-auto h-12 w-12 rounded-full bg-amber-400/20 border border-amber-300/40 flex items-center justify-center animate-pulse">
+              <span class="text-amber-300 font-black">⚡</span>
+            </div>
+
+            @if (choqueActivo()) {
+              <div class="mx-auto mt-2 h-8 w-8 rounded-full border-2 border-amber-300/60 animate-ping"></div>
+            }
+          } @else {
+            <p class="text-white/80 text-lg sm:text-xl md:text-2xl font-black">VS</p>
+          }
+        </div>
+
+        <div
+          class="rounded-xl border border-blue-500/40 bg-blue-500/10 p-4 transition-all duration-700"
+          [class.opacity-0]="!entradaEquiposActiva()"
+          [class.opacity-100]="entradaEquiposActiva()"
+          [class.translate-x-8]="!entradaEquiposActiva()"
+          [class.translate-x-0]="entradaEquiposActiva()"
+          [class.ring-2]="animacionFase() === 'resultado' && esEquipoGanador('retado')"
+          [class.ring-emerald-400]="animacionFase() === 'resultado' && esEquipoGanador('retado')"
+        >
+          <p class="text-blue-200 text-xs uppercase tracking-wider mb-1">Retado</p>
+          <p class="text-white font-bold text-base sm:text-lg break-words">
+            {{ partidaAnimada.retado.nombre }} {{ partidaAnimada.retado.apellido }}
+          </p>
+
+          <div class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+            @for (personaje of getEquipoPersonajes(partidaAnimada.equipoRetado); track $index) {
+              <div
+                class="relative overflow-hidden rounded-xl border border-blue-400/20 bg-gradient-to-br from-blue-500/10 via-slate-900/40 to-slate-950/60 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all duration-500"
+                [style.transitionDelay.ms]="$index * 120"
+                [class.opacity-0]="!entradaEquiposActiva()"
+                [class.opacity-100]="entradaEquiposActiva()"
+                [class.translate-y-3]="!entradaEquiposActiva()"
+                [class.translate-y-0]="entradaEquiposActiva()"
+              >
+                @if (getPersonajeImagenUrl(personaje); as imageUrl) {
+                  <img
+                    [src]="imageUrl"
+                    [alt]="getPersonajeNombre(personaje)"
+                    class="w-full h-24 sm:h-28 object-contain rounded-lg scale-110 drop-shadow-[0_8px_18px_rgba(0,0,0,0.45)]"
+                  />
+                } @else {
+                  <div class="w-full h-24 sm:h-28 rounded-lg bg-slate-800/90 flex items-center justify-center text-2xl">🦸</div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      @if (animacionFase() === 'combate') {
+        <div class="h-2 w-full bg-white/10 rounded-full overflow-hidden mb-4">
+          <div class="h-full w-full bg-gradient-to-r from-red-500 via-amber-400 to-blue-500 animate-pulse"></div>
+        </div>
+      }
+
+      @if (animacionFase() === 'resultado' && resultadoAnimacion(); as resultado) {
+        <div class="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-center">
+          <p class="text-emerald-300 text-sm uppercase tracking-wider mb-1">Ganador</p>
+          @if (esGanadorUsuarioActual(resultado)) {
+            <p class="text-xl sm:text-2xl font-black text-emerald-300 mb-1">¡Has ganado!</p>
+          }
+          <p class="text-white font-black text-lg sm:text-xl break-words">
+            {{ resultado.ganador?.nombre }} {{ resultado.ganador?.apellido }}
+          </p>
+          <p class="text-slate-100 text-sm sm:text-base font-semibold mt-2">
+            Marcador: {{ marcadorRetadorAnimado() }} - {{ marcadorRetadoAnimado() }}
+          </p>
+
+          @if (resultado.detalleResultado.retador && resultado.detalleResultado.retado) {
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
+              <div class="rounded-lg border border-red-400/30 bg-red-500/10 p-3">
+                <p class="text-red-100 text-sm font-bold uppercase tracking-wider mb-3 break-words">
+                  {{ partidaAnimada.retador.nombre }} {{ partidaAnimada.retador.apellido }}
+                </p>
+
+                <div class="space-y-1.5">
+                  <p class="text-slate-100 text-sm flex items-center justify-between">
+                    <span class="inline-flex items-center gap-2">Roles clave
+                      <span class="relative group inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[10px] font-bold text-white cursor-help">i
+                        <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 sm:w-48 rounded bg-slate-900 border border-white/20 px-2 py-1 text-[11px] text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity z-10">Puntos por combinar bien los tipos de héroe.</span>
+                      </span>
+                    </span>
+                    <span class="font-bold">{{ resultado.detalleResultado.retador.bonusRoles }}</span>
+                  </p>
+
+                  <p class="text-slate-100 text-sm flex items-center justify-between">
+                    <span class="inline-flex items-center gap-2">Desempeño
+                      <span class="relative group inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[10px] font-bold text-white cursor-help">i
+                        <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 sm:w-48 rounded bg-slate-900 border border-white/20 px-2 py-1 text-[11px] text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity z-10">Puntos por el nivel de desempeño de los jugadores</span>
+                      </span>
+                    </span>
+                    <span class="font-bold">{{ resultado.detalleResultado.retador.factorMomento }}</span>
+                  </p>
+
+                  <p class="text-slate-100 text-sm flex items-center justify-between">
+                    <span class="inline-flex items-center gap-2">Equilibrio
+                      <span class="relative group inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[10px] font-bold text-white cursor-help">i
+                        <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 sm:w-48 rounded bg-slate-900 border border-white/20 px-2 py-1 text-[11px] text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity z-10">Puntos por cumplir una base equilibrada del equipo.</span>
+                      </span>
+                    </span>
+                    <span class="font-bold">{{ resultado.detalleResultado.retador.bonusComposicion }}</span>
+                  </p>
+
+                  <p class="text-slate-100 text-sm flex items-center justify-between">
+                    <span class="inline-flex items-center gap-2">Variedad
+                      <span class="relative group inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[10px] font-bold text-white cursor-help">i
+                        <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 sm:w-48 rounded bg-slate-900 border border-white/20 px-2 py-1 text-[11px] text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity z-10">Puntos por tener distintos estilos en el equipo.</span>
+                      </span>
+                    </span>
+                    <span class="font-bold">{{ resultado.detalleResultado.retador.bonusDiversidad }}</span>
+                  </p>
+
+                  <p class="text-slate-100 text-sm flex items-center justify-between">
+                    <span class="inline-flex items-center gap-2">TeamUps
+                      <span class="relative group inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[10px] font-bold text-white cursor-help">i
+                        <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 sm:w-48 rounded bg-slate-900 border border-white/20 px-2 py-1 text-[11px] text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity z-10">Puntos por combinaciones que funcionan bien juntas.</span>
+                      </span>
+                    </span>
+                    <span class="font-bold">{{ resultado.detalleResultado.retador.bonusTeamUps }}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="rounded-lg border border-blue-400/30 bg-blue-500/10 p-3">
+                <p class="text-blue-100 text-sm font-bold uppercase tracking-wider mb-3 break-words">
+                  {{ partidaAnimada.retado.nombre }} {{ partidaAnimada.retado.apellido }}
+                </p>
+
+                <div class="space-y-1.5">
+                  <p class="text-slate-100 text-sm flex items-center justify-between">
+                    <span class="inline-flex items-center gap-2">Roles clave
+                      <span class="relative group inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[10px] font-bold text-white cursor-help">i
+                        <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 sm:w-48 rounded bg-slate-900 border border-white/20 px-2 py-1 text-[11px] text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity z-10">Puntos por combinar bien los tipos de héroe.</span>
+                      </span>
+                    </span>
+                    <span class="font-bold">{{ resultado.detalleResultado.retado.bonusRoles }}</span>
+                  </p>
+
+                  <p class="text-slate-100 text-sm flex items-center justify-between">
+                    <span class="inline-flex items-center gap-2">Desempeño
+                      <span class="relative group inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[10px] font-bold text-white cursor-help">i
+                        <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 sm:w-48 rounded bg-slate-900 border border-white/20 px-2 py-1 text-[11px] text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity z-10">Puntos por el nivel de desempeño de los jugadores</span>
+                      </span>
+                    </span>
+                    <span class="font-bold">{{ resultado.detalleResultado.retado.factorMomento }}</span>
+                  </p>
+
+                  <p class="text-slate-100 text-sm flex items-center justify-between">
+                    <span class="inline-flex items-center gap-2">Equilibrio
+                      <span class="relative group inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[10px] font-bold text-white cursor-help">i
+                        <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 sm:w-48 rounded bg-slate-900 border border-white/20 px-2 py-1 text-[11px] text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity z-10">Puntos por cumplir una base equilibrada del equipo.</span>
+                      </span>
+                    </span>
+                    <span class="font-bold">{{ resultado.detalleResultado.retado.bonusComposicion }}</span>
+                  </p>
+
+                  <p class="text-slate-100 text-sm flex items-center justify-between">
+                    <span class="inline-flex items-center gap-2">Variedad
+                      <span class="relative group inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[10px] font-bold text-white cursor-help">i
+                        <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 sm:w-48 rounded bg-slate-900 border border-white/20 px-2 py-1 text-[11px] text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity z-10">Puntos por tener distintos estilos en el equipo.</span>
+                      </span>
+                    </span>
+                    <span class="font-bold">{{ resultado.detalleResultado.retado.bonusDiversidad }}</span>
+                  </p>
+
+                  <p class="text-slate-100 text-sm flex items-center justify-between">
+                    <span class="inline-flex items-center gap-2">TeamUps
+                      <span class="relative group inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/40 text-[10px] font-bold text-white cursor-help">i
+                        <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 sm:w-48 rounded bg-slate-900 border border-white/20 px-2 py-1 text-[11px] text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity z-10">Puntos por combinaciones que funcionan bien juntas.</span>
+                      </span>
+                    </span>
+                    <span class="font-bold">{{ resultado.detalleResultado.retado.bonusTeamUps }}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p class="mt-3 text-xs text-slate-300 text-center">
+              Puede aplicarse un factor de momento para ajustar ligeramente el resultado final de la partida.
+            </p>
+          }
+        </div>
+      }
+
+      @if (animacionFase() === 'resultado') {
+        <div class="mt-4 flex justify-end">
+          <button
+            (click)="cerrarPopupAnimacion()"
+            class="w-full sm:w-auto px-4 py-2 text-sm rounded bg-slate-700 hover:bg-slate-600 text-white font-medium"
+          >
+            Cerrar
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,66 @@
+.mr-character-card {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(196, 181, 253, 0.2);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.mr-character-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(99, 102, 241, 0.12), rgba(236, 72, 153, 0.08) 45%, rgba(15, 23, 42, 0.05));
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mr-character-card:hover {
+  transform: translateY(-0.25rem);
+  border-color: rgba(244, 114, 182, 0.45);
+  box-shadow:
+    0 16px 30px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(236, 72, 153, 0.2) inset,
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.mr-character-card--clickable {
+  cursor: pointer;
+}
+
+.mr-character-card--with-badges {
+  overflow: visible;
+}
+
+.mr-character-card__media {
+  position: relative;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 25% 15%, rgba(255, 255, 255, 0.12), transparent 35%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.55));
+}
+
+.mr-character-card__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(2, 6, 23, 0.32), transparent 42%);
+  pointer-events: none;
+}
+
+.mr-character-card__body {
+  position: relative;
+  z-index: 1;
+}
+
+.mr-character-card__top {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+}

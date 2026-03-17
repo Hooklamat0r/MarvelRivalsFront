@@ -1,0 +1,251 @@
+<div class="max-w-7xl mx-auto">
+
+  <button
+    (click)="goBack()"
+    class="mb-6 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold rounded-lg transition-all duration-300 flex items-center gap-2"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    Volver atrás
+  </button>
+
+
+  @if (isLoading()) {
+    <div class="flex justify-center items-center min-h-96">
+      <div class="text-center">
+        <div class="inline-block w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-slate-300 text-lg font-semibold">Cargando detalles del personaje...</p>
+      </div>
+    </div>
+  }
+
+
+  @if (error() && !isLoading()) {
+    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg text-sm font-medium">
+      {{ error() }}
+    </div>
+  }
+
+
+  @if (heroDetail() && !isLoading()) {
+    @let hero = heroDetail()!;
+
+
+    <div class="mb-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+
+        <div class="lg:col-span-1">
+          <div class="relative overflow-hidden rounded-lg bg-gradient-to-br from-red-600/20 to-pink-600/20 aspect-square">
+            @if (hero.imageUrl) {
+              <img
+                [src]="'https://marvelrivalsapi.com/' + hero.imageUrl"
+                [alt]="hero.name | titlecase"
+                class="w-full h-full object-contain"
+              />
+            }
+          </div>
+        </div>
+
+
+        <div class="lg:col-span-2 space-y-4">
+          <div>
+            <h1 class="text-4xl font-bold text-white mb-2">{{ hero.name | titlecase }}</h1>
+            @if (hero.real_name) {
+              <p class="text-slate-400 text-lg">{{ hero.real_name }}</p>
+            }
+          </div>
+
+
+          <div class="flex flex-wrap gap-3">
+            <span class="px-4 py-2 text-sm font-bold rounded-full border {{ getRoleBadgeClass(hero.role) }}">
+              {{ hero.role }}
+            </span>
+            <span class="px-4 py-2 bg-white/10 text-slate-300 text-sm font-semibold rounded-full border border-white/20">
+              {{ hero.attack_type }}
+            </span>
+            <span class="px-4 py-2 bg-white/10 text-slate-300 text-sm font-semibold rounded-full border border-white/20">
+              Dificultad: {{ hero.difficulty }}
+            </span>
+          </div>
+
+
+          @if (hero.team && hero.team.length > 0) {
+            <div>
+              <p class="text-slate-400 text-sm mb-2">Equipo:</p>
+              <div class="flex flex-wrap gap-2">
+                @for (team of hero.team; track team) {
+                  <span class="px-3 py-1 bg-red-600/20 text-red-300 text-xs font-semibold rounded-full border border-red-500/30">
+                    {{ team }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+
+
+          @if (teamUps().length > 0) {
+            <div>
+              <p class="text-slate-400 text-sm mb-2 flex items-center gap-2">
+                <span class="text-red-500">🤝</span>
+                Team-Ups:
+              </p>
+              <div class="flex flex-wrap gap-2">
+                @for (teamUp of teamUps(); track teamUp.id) {
+                  <div class="group relative">
+                    <span class="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs font-semibold rounded-full border border-blue-500/30 cursor-help">
+                      {{ teamUp.nombre }}
+                    </span>
+
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-slate-800 border border-white/20 rounded-lg p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                      <h4 class="text-white font-bold text-sm mb-1">{{ teamUp.nombre }}</h4>
+                      <p class="text-slate-300 text-xs mb-2">
+                        <span class="text-slate-400">Con: </span>
+                        <span class="font-semibold">{{ getPartnerName(teamUp, hero.id) }}</span>
+                      </p>
+                      <p class="text-slate-400 text-xs">{{ teamUp.descripcion }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+      <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6">
+        <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <span class="text-red-500">⚡</span>
+          Biografía
+        </h2>
+        <p class="text-slate-300 leading-relaxed">{{ hero.bio }}</p>
+      </div>
+
+
+      <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6">
+        <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <span class="text-red-500">📖</span>
+          Historia
+        </h2>
+        <p class="text-slate-300 leading-relaxed whitespace-pre-line">{{ hero.lore }}</p>
+      </div>
+    </div>
+
+
+    @if (hero.transformations && hero.transformations.length > 1) {
+      <div class="mb-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6">
+        <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+          <span class="text-red-500">🔄</span>
+          Transformaciones
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          @for (transformation of hero.transformations; track transformation.id) {
+            <div class="bg-white/5 border border-white/10 rounded-lg p-4 text-center hover:bg-white/10 transition-all duration-300">
+              @if (transformation.icon) {
+                <img
+                  [src]="'https://marvelrivalsapi.com/rivals' + transformation.icon"
+                  [alt]="transformation.name"
+                  class="w-20 h-20 mx-auto mb-3 object-contain"
+                />
+              }
+              <h3 class="text-white font-semibold text-sm mb-2">{{ transformation.name }}</h3>
+              @if (transformation.health) {
+                <p class="text-slate-400 text-xs">Vida: {{ transformation.health }}</p>
+              }
+              @if (transformation.movement_speed) {
+                <p class="text-slate-400 text-xs">Velocidad: {{ transformation.movement_speed }}</p>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+
+    @if (hero.costumes && hero.costumes.length > 0) {
+      <div class="mb-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6">
+        <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+          <span class="text-red-500">👕</span>
+          Skins
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          @for (costume of hero.costumes; track costume.id) {
+            <div class="bg-white/5 border border-white/10 rounded-lg p-3 text-center hover:bg-white/10 transition-all duration-300">
+              @if (costume.icon) {
+                <img
+                  [src]="'https://marvelrivalsapi.com/rivals' + costume.icon"
+                  [alt]="costume.name"
+                  class="w-full aspect-square object-contain mb-2 rounded"
+                />
+              }
+              <h3 class="text-white font-semibold text-xs">{{ costume.name }}</h3>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+
+    @if (hero.abilities && hero.abilities.length > 0) {
+      <div class="mb-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6">
+        <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <span class="text-red-500">⚔️</span>
+          Habilidades
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          @for (ability of getUniqueAbilities(); track ability.id) {
+            <div class="bg-white/5 border border-white/10 rounded-lg p-3 hover:bg-white/10 transition-all duration-300">
+              <div class="flex items-start gap-2">
+                @if (ability.icon) {
+                  <img
+                    [src]="'https://marvelrivalsapi.com/rivals' + ability.icon"
+                    [alt]="ability.name"
+                    class="w-12 h-12 object-contain flex-shrink-0"
+                  />
+                }
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    @if (ability.name) {
+                      <h5 class="text-white font-bold text-sm truncate">
+                        {{ ability.name }}
+                      </h5>
+                    }
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded
+                      @if (ability.type === 'Ultimate') {
+                        bg-yellow-500/20 text-yellow-400 border border-yellow-500/30
+                      } @else if (ability.type === 'Weapon') {
+                        bg-red-500/20 text-red-400 border border-red-500/30
+                      } @else {
+                        bg-blue-500/20 text-blue-400 border border-blue-500/30
+                      }">
+                      {{ ability.type }}
+                    </span>
+                  </div>
+                  @if (ability.description) {
+                    <p class="text-slate-400 text-xs mb-2 line-clamp-2">{{ ability.description }}</p>
+                  }
+                  @if (getImportantFields(ability.additional_fields).length > 0) {
+                    <div class="space-y-0.5">
+                      @for (field of getImportantFields(ability.additional_fields); track field.key) {
+                        <div class="flex justify-between text-xs">
+                          <span class="text-slate-500">{{ field.key }}:</span>
+                          <span class="text-slate-300 font-semibold">{{ field.value }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>
+

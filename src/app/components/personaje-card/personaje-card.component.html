@@ -1,0 +1,31 @@
+<div
+  [class]="cardClasses"
+  (click)="onCardClick($event)"
+>
+  <div class="mr-character-card__media relative overflow-hidden" [class]="mediaClass">
+    @if (imageUrl) {
+      <img
+        [src]="imageUrl"
+        [alt]="personaje.name | titlecase"
+        [class]="imageClass"
+      />
+    } @else {
+      <div [class]="fallbackClass">
+        <span [class]="fallbackIconClass">🦸</span>
+      </div>
+    }
+  </div>
+
+  <div class="mr-character-card__top">
+    <ng-content select="[card-top]"></ng-content>
+  </div>
+
+  @if (showContent) {
+    <div class="mr-character-card__body p-4">
+      <h3 [class]="titleClass">{{ personaje.name | titlecase }}</h3>
+
+      <ng-content select="[card-meta]"></ng-content>
+      <ng-content select="[card-actions]"></ng-content>
+    </div>
+  }
+</div>

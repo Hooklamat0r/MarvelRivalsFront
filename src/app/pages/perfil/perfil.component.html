@@ -1,0 +1,268 @@
+@if (authService.usuario()) {
+  <div class="max-w-5xl mx-auto">
+
+    <div class="mb-4">
+      <button
+        type="button"
+        (click)="volverAtras()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white transition-colors"
+        title="Volver al dashboard"
+        aria-label="Volver atrás"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Volver atrás
+      </button>
+    </div>
+
+    <div class="mb-12 flex justify-between items-center">
+      <div>
+        <h2 class="text-5xl font-black text-white mb-2 tracking-tight">¡Bienvenido,</h2>
+        <p class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-5xl font-black">{{ authService.usuario()?.nombre }}!</p>
+      </div>
+      <button
+        (click)="toggleEdit()"
+        class="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold rounded-lg transition-all duration-300"
+      >
+        @if (isEditing()) {
+          Cancelar
+        } @else {
+          Editar Perfil
+        }
+      </button>
+    </div>
+
+    @if (!isEditing()) {
+      <div class="mb-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Premium</p>
+            @if (authService.usuario()?.isPremium) {
+              <p class="text-emerald-300 text-lg font-semibold">Activo</p>
+              <p class="text-slate-300 text-sm">Vence: {{ authService.usuario()?.premiumUntil }}</p>
+              <p class="text-slate-400 text-xs mt-2">No puedes realizar otro pago hasta que caduque tu suscripción actual.</p>
+            } @else {
+              <p class="text-amber-300 text-lg font-semibold">Inactivo</p>
+              <p class="text-slate-300 text-sm">Actívalo para retar a tus amigos.</p>
+            }
+          </div>
+
+          @if (!authService.usuario()?.isPremium) {
+            <div class="flex items-center gap-3">
+              <select
+                [ngModel]="mesesPremium()"
+                (ngModelChange)="mesesPremium.set(+$event)"
+                class="bg-slate-800 border border-white/20 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+              >
+                <option [ngValue]="1" class="bg-slate-800 text-white">1 mes</option>
+                <option [ngValue]="3" class="bg-slate-800 text-white">3 meses</option>
+                <option [ngValue]="6" class="bg-slate-800 text-white">6 meses</option>
+                <option [ngValue]="12" class="bg-slate-800 text-white">12 meses</option>
+              </select>
+              <button
+                (click)="comprarPremium()"
+                [disabled]="comprandoPremium()"
+                class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:bg-slate-700 text-white font-medium"
+              >
+                @if (comprandoPremium()) {
+                  Procesando pago...
+                } @else {
+                  Activar premium
+                }
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+        <div class="group bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:border-red-500/50 hover:bg-white/10 transition-all duration-500">
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">📧 Email</p>
+          <p class="text-white text-lg font-semibold break-all group-hover:text-red-400 transition-colors">{{ authService.usuario()?.email }}</p>
+        </div>
+
+
+        <div class="group bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:border-red-500/50 hover:bg-white/10 transition-all duration-500">
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">👤 Nombre Completo</p>
+          <p class="text-white text-lg font-semibold group-hover:text-red-400 transition-colors">{{ authService.usuario()?.nombre }} {{ authService.usuario()?.apellido }}</p>
+        </div>
+
+        <div class="md:col-span-2 group bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:border-indigo-500/50 hover:bg-white/10 transition-all duration-500">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">✨ Próximo paso</p>
+              <p class="text-white text-lg font-semibold group-hover:text-indigo-300 transition-colors">Completa tu escuadrón y prueba nuevas combinaciones</p>
+              <p class="text-slate-300 text-sm mt-1">Descubre héroes, ajusta tu equipo y prepárate para las partidas.</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500/20 border border-indigo-400/40 text-indigo-200 animate-pulse">🦸</span>
+              <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-fuchsia-500/20 border border-fuchsia-400/40 text-fuchsia-200 animate-bounce">⚡</span>
+              <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 animate-pulse">🎮</span>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <a
+              routerLink="/personajes"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-indigo-500/40 bg-indigo-600 text-white hover:bg-indigo-700 transition-colors font-semibold shadow-lg shadow-indigo-900/30"
+            >
+              Ir a Todos los personajes
+            </a>
+          </div>
+        </div>
+      </div>
+    } @else {
+
+      <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-8">
+        <form (ngSubmit)="onUpdate()" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div>
+              <label class="block text-slate-300 text-sm font-semibold mb-2">Nombre</label>
+              <input
+                [ngModel]="nombre()"
+                (ngModelChange)="nombre.set($event)"
+                name="nombre"
+                type="text"
+                [class]="[
+                  'w-full px-4 py-3 bg-white/5 border text-white placeholder-slate-500',
+                  'rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm',
+                  'border-white/10 focus:border-red-500/50 focus:ring-red-500/20',
+                  {'opacity-50 cursor-not-allowed': isLoading()}
+                ].join(' ')"
+                placeholder="Tu nombre"
+                [disabled]="isLoading()"
+              />
+            </div>
+
+
+            <div>
+              <label class="block text-slate-300 text-sm font-semibold mb-2">Apellido</label>
+              <input
+                [ngModel]="apellido()"
+                (ngModelChange)="apellido.set($event)"
+                name="apellido"
+                type="text"
+                [class]="[
+                  'w-full px-4 py-3 bg-white/5 border text-white placeholder-slate-500',
+                  'rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm',
+                  'border-white/10 focus:border-red-500/50 focus:ring-red-500/20',
+                  {'opacity-50 cursor-not-allowed': isLoading()}
+                ].join(' ')"
+                placeholder="Tu apellido"
+                [disabled]="isLoading()"
+              />
+            </div>
+          </div>
+
+
+          <div>
+            <label class="block text-slate-300 text-sm font-semibold mb-2">Email</label>
+            <input
+              [ngModel]="email()"
+              (ngModelChange)="email.set($event)"
+              name="email"
+              type="email"
+              [class]="[
+                'w-full px-4 py-3 bg-white/5 border text-white placeholder-slate-500',
+                'rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm',
+                'border-white/10 focus:border-red-500/50 focus:ring-red-500/20',
+                {'opacity-50 cursor-not-allowed': isLoading()}
+              ].join(' ')"
+              placeholder="tu@email.com"
+              [disabled]="isLoading()"
+            />
+          </div>
+
+
+          <div>
+            <label class="block text-slate-300 text-sm font-semibold mb-2">Nueva Contraseña (opcional)</label>
+            <input
+              [ngModel]="password()"
+              (ngModelChange)="password.set($event)"
+              name="password"
+              type="password"
+              [class]="[
+                'w-full px-4 py-3 bg-white/5 border text-white placeholder-slate-500',
+                'rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm',
+                'border-white/10 focus:border-red-500/50 focus:ring-red-500/20',
+                {'opacity-50 cursor-not-allowed': isLoading()},
+                {'border-red-500': showPasswordError()}
+              ].join(' ')"
+              placeholder="Dejar vacío para no cambiar"
+              [disabled]="isLoading()"
+            />
+            @if (showPasswordError()) {
+              <p class="mt-1 text-xs text-red-400">
+                La contraseña debe tener al menos 6 caracteres
+              </p>
+            }
+          </div>
+
+
+          @if (password().length > 0) {
+            <div>
+              <label class="block text-slate-300 text-sm font-semibold mb-2">Confirmar Nueva Contraseña</label>
+              <input
+                [ngModel]="confirmPassword()"
+                (ngModelChange)="confirmPassword.set($event)"
+                name="confirmPassword"
+                type="password"
+                [class]="[
+                  'w-full px-4 py-3 bg-white/5 border text-white placeholder-slate-500',
+                  'rounded-lg focus:outline-none focus:ring-2 transition-all duration-300 backdrop-blur-sm',
+                  'border-white/10 focus:border-red-500/50 focus:ring-red-500/20',
+                  {'opacity-50 cursor-not-allowed': isLoading()},
+                  {'border-red-500': !passwordsMatch() && confirmPassword()}
+                ].join(' ')"
+                placeholder="Confirma la contraseña"
+                [disabled]="isLoading()"
+              />
+              @if (!passwordsMatch() && confirmPassword()) {
+                <p class="mt-1 text-xs text-red-400">
+                  Las contraseñas no coinciden
+                </p>
+              }
+            </div>
+          }
+
+
+          @if (error()) {
+            <div class="p-4 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg text-sm text-center font-medium">
+              {{ error() }}
+            </div>
+          }
+
+
+          <div class="flex gap-4">
+            <button
+              type="submit"
+              [disabled]="!isFormValid() || isLoading()"
+              class="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 disabled:from-slate-700 disabled:to-slate-600 text-white font-bold uppercase tracking-wider rounded-lg transition-all duration-300 hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed shadow-lg hover:shadow-red-500/50"
+            >
+              @if (!isLoading()) {
+                Guardar Cambios
+              } @else {
+                <span class="inline-flex items-center gap-2">
+                  <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  Guardando...
+                </span>
+              }
+            </button>
+            <button
+              type="button"
+              (click)="cancelEdit()"
+              [disabled]="isLoading()"
+              class="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold rounded-lg transition-all duration-300 disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+  </div>
+}

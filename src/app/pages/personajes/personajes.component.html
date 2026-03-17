@@ -1,0 +1,167 @@
+<div class="max-w-7xl mx-auto">
+
+  <div class="mb-4 flex items-center justify-between gap-3">
+    <button
+      type="button"
+      (click)="volverAtras()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white transition-colors"
+      title="Volver a la página anterior"
+      aria-label="Volver atrás"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Volver atrás
+    </button>
+
+    <button
+      type="button"
+      (click)="irAMisPersonajes()"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-indigo-500/40 bg-indigo-600 text-white hover:bg-indigo-700 transition-colors font-semibold shadow-lg shadow-indigo-900/30"
+    >
+      Ir a Mis personajes
+    </button>
+  </div>
+
+  <div class="flex gap-4 mb-8">
+    <input
+      type="text"
+      placeholder="Buscar personaje..."
+      [value]="searchTerm()"
+      (input)="onSearch($event.target.value)"
+      class="flex-1 px-4 py-2 bg-white/5 border border-white/10 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 transition-all duration-300"
+    />
+    <button
+      (click)="clearFilters()"
+      class="px-6 py-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold rounded-lg transition-all duration-300"
+    >
+      Limpiar
+    </button>
+  </div>
+
+      @if (error()) {
+        <div class="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg text-sm font-medium">
+          {{ error() }}
+        </div>
+      }
+
+
+      @if (isLoading()) {
+        <div class="flex justify-center items-center min-h-96">
+          <div class="text-center">
+            <div class="inline-block w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-slate-300 text-lg font-semibold">Cargando personajes...</p>
+          </div>
+        </div>
+      } @else {
+
+        <div class="mb-8 p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl">
+          <h3 class="text-white font-bold text-lg mb-4">Filtros</h3>
+
+
+          <div class="mb-4">
+            <p class="text-slate-300 text-sm font-semibold mb-2">Rol</p>
+            <div class="flex flex-wrap gap-2">
+              @for (rol of rolesDisponibles(); track rol) {
+                <button
+                  (click)="onFilterRol(rol)"
+                  [class]="[
+                    'px-4 py-2 rounded-lg font-semibold transition-all duration-300',
+                    selectedRol() === rol
+                      ? 'bg-red-600 text-white'
+                      : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                  ].join(' ')"
+                >
+                  {{ rol }}
+                </button>
+              }
+            </div>
+          </div>
+
+
+          <div>
+            <p class="text-slate-300 text-sm font-semibold mb-2">Dificultad</p>
+            <div class="flex flex-wrap gap-2">
+              @for (difficulty of dificultadesDisponibles(); track difficulty) {
+                <button
+                  (click)="onFilterDifficulty(difficulty)"
+                  [class]="[
+                    'px-4 py-2 rounded-lg font-semibold transition-all duration-300',
+                    selectedDifficulty() === difficulty
+                      ? 'bg-red-600 text-white'
+                      : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                  ].join(' ')"
+                >
+                  {{ difficulty }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+
+        @if (personajesFiltrados().length > 0) {
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @for (personaje of personajesFiltrados(); track personaje.id;) {
+              <app-personaje-card
+                [personaje]="personaje"
+                [clickable]="true"
+                [showContent]="false"
+                mediaClass="aspect-[3/4]"
+                imageClass="w-full h-full object-contain p-2"
+                fallbackClass="w-full h-full flex items-center justify-center"
+                fallbackIconClass="text-slate-400 text-4xl"
+                [id]="'personaje-' + personaje.id"
+                (cardClick)="viewPersonajeDetail(personaje, $event)"
+              >
+                <div card-top>
+                  @if (isSelected(personaje.id)) {
+                    <button
+                      (click)="deseleccionarPersonaje(personaje.id, $event)"
+                      [disabled]="seleccionandoId() !== null && seleccionandoId() !== personaje.id"
+                      class="pointer-events-auto absolute top-2 right-2 z-40 w-8 h-8 rounded-full bg-red-700/90 hover:bg-red-600 text-red-100 border border-red-400/60 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Deseleccionar"
+                      title="Quitar selección"
+                    >
+                      @if (seleccionandoId() === personaje.id) {
+                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      }
+                    </button>
+                  } @else {
+                    <button
+                      (click)="selectPersonaje(personaje)"
+                      [disabled]="seleccionandoId() !== null"
+                      class="pointer-events-auto absolute top-2 right-2 z-40 w-8 h-8 rounded-full bg-emerald-700/90 hover:bg-emerald-600 text-emerald-100 border border-emerald-400/60 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Seleccionar"
+                      title="Añadir selección"
+                    >
+                      @if (seleccionandoId() === personaje.id) {
+                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                      }
+                    </button>
+                  }
+                </div>
+              </app-personaje-card>
+            }
+          </div>
+        } @else {
+          <div class="text-center py-12">
+            <p class="text-slate-400 text-lg">No se encontraron personajes con los filtros aplicados</p>
+          </div>
+        }
+      }
+</div>

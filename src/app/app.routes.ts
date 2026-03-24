@@ -13,10 +13,11 @@ import { adminGuard } from './guards/admin.guard';
 import { PartidasComponent } from './pages/partidas/partidas.component';
 import { AmigosComponent } from './pages/amigos/amigos.component';
 import { AyudaComponent } from './pages/ayuda/ayuda.component';
+import { notAuthGuard } from './guards/notAuth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
+  { path: 'login', component: LoginComponent, canActivate: [notAuthGuard] },
   { path: 'register', component: RegisterComponent },
   {
     path: '',
@@ -26,40 +27,50 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         component: DashboardComponent,
+        title: "Dashboard"
       },
       {
         path: 'personajes',
         component: PersonajesComponent,
+        title: "Personajes"
       },
       {
         path: 'personajes/:id',
         component: PersonajeDetailComponent,
+        title: "Personaje"
       },
       {
         path: 'perfil',
         component: PerfilComponent,
+        title: "Perfil"
       },
       {
         path: 'mis-personajes',
         component: MisPersonajesComponent,
+        title: "Equipo"
       },
       {
         path: 'partidas',
         component: PartidasComponent,
+        title: "Partidas"
       },
       {
         path: 'amigos',
         component: AmigosComponent,
+        title: "Amigos"
       },
       {
         path: 'ayuda',
         component: AyudaComponent,
+        title: "Ayuda"
       },
       {
         path: 'admin',
         component: AdminComponent,
         canActivate: [adminGuard],
+        title: "Admin"
       },
     ],
   },
+  { path: '**', redirectTo: '/dashboard'}
 ];
